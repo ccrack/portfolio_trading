@@ -1,3 +1,58 @@
+from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
+
 
 # Create your models here.
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    # personal information
+    phone_number = models.CharField(max_length=11, blank=True, null=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+
+    # trading specific fields
+    account_balance = models.DecimalField(default=10000, max_digits=15, decimal_places=2, blank=True)
+
+    # tracking
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_login_ip = models.GenericIPAddressField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'user_profiles'
+        verbose_name = 'User Profile'
+        verbose_name_plural = 'User Profiles'
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
+
+
+# Auto-create profile when user is created
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
+
+
+# create Usersession model
+class UserSession(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_sessions')
+    session_key = models.CharField(max_length=40, unique=True)
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+    last_activity = models.DateTimeField(default=timezone.now)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'user_sessions'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.session_key[:10]}..."
