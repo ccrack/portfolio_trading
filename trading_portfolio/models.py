@@ -56,3 +56,18 @@ class UserSession(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.session_key[:10]}..."
+
+
+# create assets model
+class Asset(models.Model):
+    symbol = models.CharField(max_length=120)
+    name = models.CharField(max_length=120)
+    asset_type = models.CharField(max_length=120, choices=[
+        ('stock', 'Stock'),
+        ('crypto', 'Cryptocurrency'),
+        ('forex', 'Forex'),
+        ('etf', 'ETF'),
+    ])
+
+    def __str__(self):
+        return f"{self.symbol} - {self.name}"

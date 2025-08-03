@@ -1,3 +1,5 @@
+from symtable import Class
+
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django import forms
@@ -43,3 +45,8 @@ class ProfileForm(forms.ModelForm):
             'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'account_balance': forms.NumberInput(attrs={'class': 'form-control', 'disabled': True}),
         }
+
+#create form for load financial instruments data
+class StockSearchForm(forms.Form):
+    symbols = forms.CharField(label="", max_length=100, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Symbol'}))
+

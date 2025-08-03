@@ -1,14 +1,18 @@
+import http
 from datetime import timezone
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.db.models.fields import return_None
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 
-from .forms import SignUpForm, ProfileForm
+from .forms import SignUpForm, ProfileForm, StockSearchForm
 from .models import UserSession
+
+import yfinance as yf
 
 
 # Create your views here.
@@ -135,4 +139,38 @@ def logout_view(request):
 
 
 def dashboard(request):
-    return render(request, 'accounts/dashboard.html', context={'user': request.user})
+    return render(request, 'accounts/dashboard.html', load_stock_data(request))
+
+#load data for financial instrument
+def load_stock_data(request):
+    data = None
+    selected_symbols = None
+    error = None
+    context = None
+
+    if request.method == 'POST':
+        form = StockSearchForm(request.POST)
+        if form.is_valid():
+            selected_symbols = form.cleaned_data['symbols'].upper()
+            try:
+                df = yf.download(selected_symbols, period='5d', interval='1d')
+                if df.empty:
+                    error = "No Data Found'{selected_symbols}'"
+                else:
+                    data = df.reset_index().to_dict('records')
+            except Exception as e:
+                error = f"Error to find data: str(e)"
+        else:
+            form = StockSearchForm()
+        context = {'user': request.user, 'data': data, 'form': form, 'symbols': selected_symbols,
+                           'error': error}
+    return context
+
+    # context = {'user': request.user,
+    #            'data': data,
+    #            'form': form,
+    #            'symbols': selected_symbols,
+    #            'error': error
+    #            }
+    # return JsonResponse(context)
+

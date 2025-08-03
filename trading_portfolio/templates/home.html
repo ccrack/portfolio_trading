@@ -2,12 +2,19 @@
 {% load static %}
 
 {% block content %}
-        <div class="col-md-6 d-flex flex-column justify-content-center align-items-start">
-            <h1 class="mb-3">Welcome to your trading portfolio</h1>
-            <p class="mb-4">{% lorem %}</p>
-            <a href="{% url 'register' %}" class="btn btn-primary">Get Started</a>
-        </div>
-        <div class="col-md-6 d-flex justify-content-center align-items-center">
-            <img src="{% static 'trading_portfolio/images/computer_trading_image.png' %}" alt="My Image" style="max-height: 400px;">
-        </div>
+<div class="col-md-6 d-flex flex-column justify-content-center align-items-start">
+    <h1 class="mb-3">Welcome to your trading portfolio</h1>
+    <p class="mb-4">{% lorem %}</p>
+    <a href="
+            {% if user.is_authenticated %}
+                {% url 'dashboard' %}
+            {% else %}
+               {% url 'login' %}
+            {% endif %}"
+       class="btn btn-primary">Get Started</a>
+</div>
+<div class="col-md-6 d-flex justify-content-center align-items-center">
+    <img src="{% static 'trading_portfolio/images/computer_trading_image.png' %}" alt="My Image"
+         style="max-height: 400px;">
+</div>
 {% endblock %}

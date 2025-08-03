@@ -2,11 +2,19 @@
 
 {% block content %}
 <div class="container">
-  <div class="row">
-    <div class="col-md-12">
-      Welcome to your trading portfolio, {{user.first_name}}
-       {{user.last_name}}, {{user.profile.account_balance}}
+    <div class="row">
+        <div class="col-12">
+            Welcome to your trading portfolio, {{user.first_name}}
+            {{user.last_name}}, {{user.profile.account_balance}}
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                {{ data }}
+                <button type="submit">Search Symbol</button>
+            </form>
+        </div>
     </div>
-  </div>
 </div>
 {% endblock %}
+
+
