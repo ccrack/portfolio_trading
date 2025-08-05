@@ -1,18 +1,96 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-12">
-            Welcome to your trading portfolio, {{user.first_name}}
-            {{user.last_name}}, {{user.profile.account_balance}}
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                {{ data }}
-                <button type="submit">Search Symbol</button>
-            </form>
-        </div>
+<style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .dashboard-section {
+      background-color: #343a40;
+      color: #ffffff;
+      border-radius: 0.3rem;
+      padding: 1.5rem;
+      height: 100%;
+    }
+    .dashboard-title {
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .graph-box {
+      height: 300px;
+    }
+    .transaction-box {
+      height: 200px;
+    }
+    @media (max-width: 768px) {
+      .graph-box, .transaction-box {
+        height: auto;
+      }
+    }
+</style>
+
+<!-- Financial Instrument -->
+<div class="col-lg-3 col-md-12">
+    <div class="dashboard-section h-100">
+        <div class="dashboard-title">Financial Instrument</div>
+        <form method="POST" action="{% url 'dashboard' %}">
+            {% csrf_token %}
+            <div class="input-group mb-3">
+                <input name="Symbols" type="text" class="form-control" placeholder="Enter Symbols"
+                       aria-label="Example text with button addon"
+                       aria-describedby="button-addon1" required>
+                <button class="btn btn-outline-secondary" type="submit" id="button-addon1">Search</button>
+            </div>
+        </form>
+
+        <table class="table table-striped table-border mt-3">
+            <thead class="table-dark">
+            <tr>
+                <th>Symbol</th>
+                <th>Lt Price</th>
+                <th>Op Price</th>
+                <th>ch(%)</th>
+            </tr>
+            </thead>
+
+
+            <tbody>
+            {% for item in financialTableData %}
+            <tr>
+                <td>{{ item.symbol }}</td>
+                <td>{{ item.last_price }}</td>
+                <td>{{ item.open_price }}</td>
+                <td>{{ item.change_percent }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Graph and Transaction in center -->
+<div class="col-lg-6 col-md-12">
+    <!-- Graph -->
+    <div class="dashboard-section graph-box mb-4">
+        <div class="dashboard-title">Graph</div>
+        <div class="text-center">[Insert Chart.js or Plotly graph here]</div>
+    </div>
+    <!-- Transaction History -->
+    <div class="dashboard-section transaction-box">
+        <div class="dashboard-title">Transaction History</div>
+        <div class="text-center">[Recent Orders Table or List]</div>
+    </div>
+</div>
+
+<!-- Portfolio -->
+<div class="col-lg-3 col-md-12">
+    <div class="dashboard-section h-100 d-flex">
+        <div class="dashboard-title">Portfolio</div>
+        <p class="text-center">[Summary: Holdings, Balance, P/L]</p>
+        Welcome to your trading portfolio, {{user.first_name}}
+        {{user.last_name}}, {{user.profile.account_balance}}
     </div>
 </div>
 {% endblock %}

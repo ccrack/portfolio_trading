@@ -13,6 +13,7 @@ from .forms import SignUpForm, ProfileForm, StockSearchForm
 from .models import UserSession
 
 import yfinance as yf
+import pandas as pd
 
 
 # Create your views here.
@@ -139,38 +140,62 @@ def logout_view(request):
 
 
 def dashboard(request):
-    return render(request, 'accounts/dashboard.html', load_stock_data(request))
+    context = {
+        'financialTableData' : financial_table_view()
+    }
+    return render(request, 'accounts/dashboard.html', context)
 
 #load data for financial instrument
-def load_stock_data(request):
-    data = None
-    selected_symbols = None
-    error = None
-    context = None
+# def load_stock_data(request):
+#     data = None
+#     error = None
+#     context = None
+#
+#     if request.method == 'POST':
+#         symbols = request.POST['Symbols']
+#         if symbols != "":
+#             try:
+#                 df = yf.download(symbols, period='5d', interval='1d')
+#                 if df.empty:
+#                     error = "No Data Found'{symbols}'"
+#                 else:
+#                     data = df.reset_index().to_dict('records')
+#             except Exception as e:
+#                 error = f"Error to find data: str(e)"
+#         else:
+#             return redirect('accounts/dashboard')
+#         context = {'user': request.user, 'data': data, 'Symbols': symbols,
+#                            'error': error}
+#     return context
 
-    if request.method == 'POST':
-        form = StockSearchForm(request.POST)
-        if form.is_valid():
-            selected_symbols = form.cleaned_data['symbols'].upper()
+def financial_table_view():
+    symbols = ['AAPL', 'MSFT', 'TSLA', 'GOOG', 'AMZN']
+    result = []
+    try:
+        data = yf.download(tickers=symbols, period="1d", interval="1m", group_by='ticker', auto_adjust=True)
+
+        for symbol in symbols:
             try:
-                df = yf.download(selected_symbols, period='5d', interval='1d')
-                if df.empty:
-                    error = "No Data Found'{selected_symbols}'"
-                else:
-                    data = df.reset_index().to_dict('records')
-            except Exception as e:
-                error = f"Error to find data: str(e)"
-        else:
-            form = StockSearchForm()
-        context = {'user': request.user, 'data': data, 'form': form, 'symbols': selected_symbols,
-                           'error': error}
-    return context
+                last_price = data[symbol]['Close'].dropna().iloc[-1]
+                open_price = data[symbol]['Open'].dropna().iloc[-1]
+                percent_change = ((last_price - open_price) / open_price) * 100
 
-    # context = {'user': request.user,
-    #            'data': data,
-    #            'form': form,
-    #            'symbols': selected_symbols,
-    #            'error': error
-    #            }
-    # return JsonResponse(context)
+                result.append({
+                    'symbol': symbol,
+                    'last_price': round(last_price, 2),
+                    'open_price': round(open_price, 2),
+                    'change_percent': round(percent_change, 2)
+                })
+            except (KeyError, IndexError):
+                result.append({
+                    'symbol': symbol,
+                    'last_price': 'N/A',
+                    'open_price': 'N/A',
+                    'change_percent': 'N/A'
+                })
+
+    except Exception as e:
+        print("Error fetching data:", e)
+
+    return result
 
