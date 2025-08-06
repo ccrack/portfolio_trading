@@ -3,13 +3,16 @@ from datetime import timezone
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.dispatch import receiver
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 
 from .forms import SignUpForm, ProfileForm, StockSearchForm
-from .models import UserSession
+from .models import UserSession, Portfolio
+from django.db.models.signals import post_save
 
 import yfinance as yf
 import matplotlib
@@ -204,3 +207,8 @@ def get_chart(request, symbol):
     except Exception as e:
         return JsonResponse({'error': str(e)})
 
+# create automatic portfolio when created user
+@receiver(post_save, sender=User)
+def create_portfolio(sender, instance, created, **kwargs):
+    if created:
+        Portfolio.objects.create(user=instance)
