@@ -3,7 +3,6 @@ from datetime import timezone
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.db.models.fields import return_None
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.decorators.cache import never_cache
@@ -13,8 +12,12 @@ from .forms import SignUpForm, ProfileForm, StockSearchForm
 from .models import UserSession
 
 import yfinance as yf
-import pandas as pd
-
+import matplotlib
+matplotlib.use('Agg') #use non-GUI backend to prevent 'Starting a Matplotlib GUI outside of the main thread will likely fail' error
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
+from django.http import JsonResponse
 
 # Create your views here.
 def home(request):
@@ -145,31 +148,9 @@ def dashboard(request):
     }
     return render(request, 'accounts/dashboard.html', context)
 
-#load data for financial instrument
-# def load_stock_data(request):
-#     data = None
-#     error = None
-#     context = None
-#
-#     if request.method == 'POST':
-#         symbols = request.POST['Symbols']
-#         if symbols != "":
-#             try:
-#                 df = yf.download(symbols, period='5d', interval='1d')
-#                 if df.empty:
-#                     error = "No Data Found'{symbols}'"
-#                 else:
-#                     data = df.reset_index().to_dict('records')
-#             except Exception as e:
-#                 error = f"Error to find data: str(e)"
-#         else:
-#             return redirect('accounts/dashboard')
-#         context = {'user': request.user, 'data': data, 'Symbols': symbols,
-#                            'error': error}
-#     return context
 
 def financial_table_view():
-    symbols = ['AAPL', 'MSFT', 'TSLA', 'GOOG', 'AMZN']
+    symbols  = ['AAPL', 'MSFT', 'TSLA', 'GOOG', 'AMZN', 'RGTI', 'UBER','JEPQ', 'LCID']
     result = []
     try:
         data = yf.download(tickers=symbols, period="1d", interval="1m", group_by='ticker', auto_adjust=True)
@@ -198,4 +179,28 @@ def financial_table_view():
         print("Error fetching data:", e)
 
     return result
+
+#Get chart
+def get_chart(request, symbol):
+    try:
+        data = yf.download(symbol, period='1d', interval='1m', auto_adjust=True)
+
+        plt.figure(figsize=(10, 5))
+        plt.plot(data.index, data['Close'], label='Close Price', color='r')
+        plt.title(f'{symbol} - 1 Day')
+        plt.xlabel('Date')
+        plt.ylabel('Price (USD)')
+        plt.grid(True)
+        plt.legend()
+
+        buf = BytesIO()
+        plt.savefig(buf, format='png')
+        plt.close()
+        buf.seek(0)
+
+        image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+
+        return JsonResponse({'image': image_base64})
+    except Exception as e:
+        return JsonResponse({'error': str(e)})
 
