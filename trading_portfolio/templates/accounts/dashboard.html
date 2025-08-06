@@ -32,13 +32,15 @@
 </style>
 
 <!-- Financial Instrument -->
+
 <div class="col-lg-3 col-md-12">
     <div class="dashboard-section h-100">
         <div class="dashboard-title">Financial Instrument</div>
         <form method="POST" action="{% url 'dashboard' %}">
             {% csrf_token %}
             <div class="input-group mb-3">
-                <input id="js-search-symbol" name="Symbols" type="text" class="form-control" placeholder="Enter Symbols"
+                <input id="js-search-symbol" name="Symbols" type="text" class="form-control"
+                       placeholder="Enter Symbols"
                        aria-label="Example text with button addon"
                        aria-describedby="button-addon1" required>
                 <button class="btn btn-outline-secondary" type="submit" id="button-addon1">Search</button>
@@ -96,32 +98,34 @@
         {{user.last_name}}, {{user.profile.account_balance}}
     </div>
 </div>
+
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 <script>
-        $(document).ready(function () {
-            show_graph($('#financial-table tr').not(':first')[0])
-            $('#financial-table tr').not(':first').click(function () {
-                show_graph(this);
-            });
+    $(document).ready(function () {
+        show_graph($('#financial-table tr').not(':first')[0])
+        $('#financial-table tr').not(':first').click(function () {
+            show_graph(this);
         });
-        let show_graph = (obj) =>{
-            const symbol = $(obj).find('td:eq(0)').text();
-            $('#chart-title').text(`Chart for ${symbol}`);
-            $('#chart-container').show();
+    });
+    let show_graph = (obj) =>{
+        const symbol = $(obj).find('td:eq(0)').text();
+        $('#chart-title').text(`Chart for ${symbol}`);
+        $('#chart-container').show();
 
-            $.ajax({
-                url: `/get-chart/${symbol}/`,
-                method: 'GET',
-                success: function (response) {
-                    if (response.image) {
-                        $('#chart-image').attr('src', 'data:image/png;base64,' + response.image);
-                    } else {
-                        alert('Error generating chart: ' + response.error);
-                    }
+        $.ajax({
+            url: `/get-chart/${symbol}/`,
+            method: 'GET',
+            success: function (response) {
+                if (response.image) {
+                    $('#chart-image').attr('src', 'data:image/png;base64,' + response.image);
+                } else {
+                    alert('Error generating chart: ' + response.error);
                 }
-            });
-        }
+            }
+        });
+    }
 </script>
 {% endblock %}
 
