@@ -94,8 +94,33 @@
         </div>
     </div>
     <!-- Transaction History -->
-    <div class="dashboard-section transaction-box">
-        <div class="dashboard-title">Transaction History</div>
+    <div class="dashboard-section transaction-box container" style="height:300px; overflow-y:auto;">
+        <div class="row" >
+            <div class="dashboard-title">Transaction History</div>
+
+            <table border="1" class="table table-dark table-hover">
+                <thead>
+                <tr>
+                    <th>Asset</th>
+                    <th>Transaction type</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Time</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for trans in transactions %}
+                <tr>
+                    <td>{{ trans.asset }}</td>
+                    <td>{{ trans.transaction_type }}</td>
+                    <td>{{ trans.quantity }}</td>
+                    <td>{{ trans.price|floatformat:2 }}</td>
+                    <td>${{ trans.timestamp }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
     </div>
 </div>
@@ -127,7 +152,6 @@
             {% endfor %}
             </tbody>
         </table>
-
 
 
         <form method="POST" action="{% url 'trade_asset' %}">
