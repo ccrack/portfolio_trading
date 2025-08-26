@@ -92,15 +92,13 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.transaction_type} {self.quantity} {self.asset.symbol} @ {self.price}"
-    
+
 #create PortfolioPosition model
 class PortfolioPosition(models.Model):
     portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name='positions')
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=20, decimal_places=8)
 
-    class Meta:
-        unique_together = ('portfolio', 'asset')
 
     def __str__(self):
         return f"{self.portfolio.user.username} holds {self.quantity} of {self.asset.symbol}"

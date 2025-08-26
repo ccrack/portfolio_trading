@@ -29,6 +29,13 @@
         height: auto;
       }
     }
+
+    .btn-green{
+    background-color: #4CAF50;
+    }
+    .btn-red{
+    background-color: red;
+    }
 </style>
 
 <!-- Financial Instrument -->
@@ -51,8 +58,8 @@
             <thead class="table-dark">
             <tr>
                 <th>Symbol</th>
-                <th>Lt Price</th>
-                <th>Op Price</th>
+                <th>Last Pr</th>
+                <th>Open Pr</th>
                 <th>ch(%)</th>
             </tr>
             </thead>
@@ -80,7 +87,11 @@
             <h5 id="chart-title"></h5>
             <img id="chart-image" src="" alt="Stock Chart" class="img-fluid rounded shadow">
         </div>
-
+        <div>
+            <a class="btn btn-primary btn-green" href="#quantity" >BUY</a>
+            <a class="btn btn-primary btn-red" href="#quantity">SELL</a>
+            {{user.asset}}
+        </div>
     </div>
     <!-- Transaction History -->
     <div class="dashboard-section transaction-box">
@@ -91,11 +102,32 @@
 
 <!-- Portfolio -->
 <div class="col-lg-3 col-md-12">
-    <div class="dashboard-section h-100 d-flex">
+    <div class="dashboard-section h-100 d-flex justify-content-center align-items-center flex-column">
         <div class="dashboard-title">Portfolio</div>
         <p class="text-center">[Summary: Holdings, Balance, P/L]</p>
         Welcome to your trading portfolio, {{user.first_name}}
         {{user.last_name}}, {{user.profile.account_balance}}
+
+
+        <form method="POST" action="{% url 'trade_asset' %}">
+            {% csrf_token %}
+            <div class="from-group d-flex gap-2">
+                <input class="form-control" type="text" name="symbol" id="symbol" required hidden="hidden">
+
+                <input class="form-control" type="number" step="0.0001" name="quantity" placeholder="Quantity"
+                       id="quantity" required>
+
+                <input  class="form-control" type="number" step="0.01" name="price" id="price" required hidden="hidden">
+
+                <select class="form-control" name="transaction_type" id="transaction_type" required>
+                    <option value="BUY">Buy</option>
+                    <option value="SELL">Sell</option>
+                </select>
+
+                <button class="btn btn-success" type="submit">Ok</button>
+            </div>
+
+        </form>
     </div>
 </div>
 
@@ -103,14 +135,18 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 <script>
+    let symbol = "";
+    let price = 0.00;
     $(document).ready(function () {
         show_graph($('#financial-table tr').not(':first')[0])
         $('#financial-table tr').not(':first').click(function () {
             show_graph(this);
         });
+        load_assets_data();
     });
     let show_graph = (obj) =>{
-        const symbol = $(obj).find('td:eq(0)').text();
+        symbol = $(obj).find('td:eq(0)').text();
+        price = $(obj).find('td:eq(1)').text();
         $('#chart-title').text(`Chart for ${symbol}`);
         $('#chart-container').show();
 
@@ -125,6 +161,12 @@
                 }
             }
         });
+    }
+    let load_assets_data = () =>{
+        $('.btn-green, .btn-red').on('click', () => {
+            $('#symbol').val(symbol)
+           $('#price').val(price)
+        })
     }
 </script>
 {% endblock %}

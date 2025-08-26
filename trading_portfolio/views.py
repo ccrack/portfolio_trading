@@ -9,18 +9,23 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
+from typing_extensions import assert_type
 
 from .forms import SignUpForm, ProfileForm, StockSearchForm
-from .models import UserSession, Portfolio
+from .models import UserSession, Portfolio, Asset, Transaction, PortfolioPosition
 from django.db.models.signals import post_save
+from decimal import Decimal
 
 import yfinance as yf
 import matplotlib
-matplotlib.use('Agg') #use non-GUI backend to prevent 'Starting a Matplotlib GUI outside of the main thread will likely fail' error
+
+matplotlib.use(
+    'Agg')  # use non-GUI backend to prevent 'Starting a Matplotlib GUI outside of the main thread will likely fail' error
 import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+
 
 # Create your views here.
 def home(request):
@@ -147,13 +152,13 @@ def logout_view(request):
 
 def dashboard(request):
     context = {
-        'financialTableData' : financial_table_view()
+        'financialTableData': financial_table_view()
     }
     return render(request, 'accounts/dashboard.html', context)
 
 
 def financial_table_view():
-    symbols  = ['AAPL', 'MSFT', 'TSLA', 'GOOG', 'AMZN', 'RGTI', 'UBER','JEPQ', 'LCID']
+    symbols = ['AAPL', 'MSFT', 'TSLA', 'GOOG', 'AMZN', 'RGTI', 'UBER', 'JEPQ', 'LCID']
     result = []
     try:
         data = yf.download(tickers=symbols, period="1d", interval="1m", group_by='ticker', auto_adjust=True)
@@ -183,7 +188,8 @@ def financial_table_view():
 
     return result
 
-#Get chart
+
+# Get chart
 def get_chart(request, symbol):
     try:
         data = yf.download(symbol, period='1d', interval='1m', auto_adjust=True)
@@ -207,8 +213,84 @@ def get_chart(request, symbol):
     except Exception as e:
         return JsonResponse({'error': str(e)})
 
+
 # create automatic portfolio when created user
 @receiver(post_save, sender=User)
 def create_portfolio(sender, instance, created, **kwargs):
     if created:
         Portfolio.objects.create(user=instance)
+
+
+# add logic buy/sell asset
+@login_required
+def trade_asset(request):
+    if request.method == "POST":
+        symbol = request.POST.get("symbol").upper()
+        quantity = Decimal(request.POST.get("quantity"))
+        price = Decimal(request.POST.get("price"))
+        transaction_type = request.POST.get('transaction_type')
+
+        portfolio = request.user.portfolio
+        profile = request.user.profile  # 👈 user’s balance
+
+        # check or create asset
+        asset, created = Asset.objects.get_or_create(
+            symbol=symbol,
+            defaults={'name': symbol, 'asset_type': 'stock'}
+        )
+
+        total_cost = quantity * price
+
+        if transaction_type == "BUY":
+            # check if user has enough balance
+            if profile.account_balance < total_cost:
+                return HttpResponse("Not enough balance!", status=400)
+
+            # decrease balance
+            profile.account_balance -= total_cost
+            profile.save()
+
+            # save transaction
+            Transaction.objects.create(
+                portfolio=portfolio, asset=asset, transaction_type="BUY",
+                quantity=quantity, price=price
+            )
+
+            # update portfolio position
+            position, _ = PortfolioPosition.objects.get_or_create(
+                portfolio=portfolio, asset=asset, defaults={'quantity': Decimal('0')}
+            )
+            position.quantity += quantity
+            position.save()
+
+        elif transaction_type == "SELL":
+            # check if user has enough asset
+            try:
+                position = PortfolioPosition.objects.get(portfolio=portfolio, asset=asset)
+            except PortfolioPosition.DoesNotExist:
+                return HttpResponse("You don't own this asset!", status=400)
+
+            if position.quantity < quantity:
+                return HttpResponse("Not enough asset quantity to sell!", status=400)
+
+            # decrease asset, increase balance
+            position.quantity -= quantity
+            if position.quantity == 0:
+                position.delete()
+            else:
+                position.save()
+
+            profile.account_balance += total_cost
+            profile.save()
+
+            # save transaction
+            Transaction.objects.create(
+                portfolio=portfolio, asset=asset, transaction_type="SELL",
+                quantity=quantity, price=price
+            )
+
+        return redirect('dashboard')
+
+    return HttpResponse("Invalid request", status=400)
+    assets = Asset.objects.all()
+    return render(request, 'accounts/dashboard.html', {'assets': assets})
