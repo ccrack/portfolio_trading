@@ -152,7 +152,9 @@ def logout_view(request):
 
 def dashboard(request):
     context = {
-        'financialTableData': financial_table_view()
+        'financialTableData': financial_table_view(),
+        'positions': PortfolioPosition.objects.all(),
+        'transactions': Transaction.objects.all(),
     }
     return render(request, 'accounts/dashboard.html', context)
 
@@ -293,4 +295,4 @@ def trade_asset(request):
 
     return HttpResponse("Invalid request", status=400)
     assets = Asset.objects.all()
-    return render(request, 'accounts/dashboard.html', {'assets': assets})
+    return render(request, 'accounts/dashboard.html')

@@ -88,7 +88,7 @@
             <img id="chart-image" src="" alt="Stock Chart" class="img-fluid rounded shadow">
         </div>
         <div>
-            <a class="btn btn-primary btn-green" href="#quantity" >BUY</a>
+            <a class="btn btn-primary btn-green" href="#quantity">BUY</a>
             <a class="btn btn-primary btn-red" href="#quantity">SELL</a>
             {{user.asset}}
         </div>
@@ -102,11 +102,32 @@
 
 <!-- Portfolio -->
 <div class="col-lg-3 col-md-12">
-    <div class="dashboard-section h-100 d-flex justify-content-center align-items-center flex-column">
+    <div class="dashboard-section h-100 d-flex gap-2 flex-column">
         <div class="dashboard-title">Portfolio</div>
-        <p class="text-center">[Summary: Holdings, Balance, P/L]</p>
-        Welcome to your trading portfolio, {{user.first_name}}
-        {{user.last_name}}, {{user.profile.account_balance}}
+
+        <h4>Welcome to your trading portfolio, {{ request.user.username }}</h4>
+        <h4>{{ portfolio.name }}</h4>
+        <h4>Total Value: ${{ user.profile.account_balance|floatformat:2 }}</h4>
+
+        <table class="table table-dark table-hover">
+            <thead>
+            <tr>
+                <th>Asset</th>
+                <th>Quantity</th>
+                <th>Value</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for pos in positions %}
+            <tr>
+                <td>{{ pos.asset.symbol }}</td>
+                <td>{{ pos.quantity|floatformat:2 }}</td>
+                <td>${{ 0 }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
 
 
         <form method="POST" action="{% url 'trade_asset' %}">
@@ -117,7 +138,8 @@
                 <input class="form-control" type="number" step="0.0001" name="quantity" placeholder="Quantity"
                        id="quantity" required>
 
-                <input  class="form-control" type="number" step="0.01" name="price" id="price" required hidden="hidden">
+                <input class="form-control" type="number" step="0.01" name="price" id="price" required
+                       hidden="hidden">
 
                 <select class="form-control" name="transaction_type" id="transaction_type" required>
                     <option value="BUY">Buy</option>
