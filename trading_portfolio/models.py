@@ -75,7 +75,7 @@ class Asset(models.Model):
 #create portfolio model for each user
 class Portfolio(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='portfolio')
-    name = models.CharField(max_length=120, unique=True, default='My Portfolio')
+    name = models.CharField(max_length=120,  default='My Portfolio')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -151,10 +151,13 @@ def logout_view(request):
 
 
 def dashboard(request):
+    # Get current user portfolio
+    portfolio = Portfolio.objects.get(user=request.user)
+
     context = {
         'financialTableData': financial_table_view(),
-        'positions': PortfolioPosition.objects.all(),
-        'transactions': Transaction.objects.all(),
+        'positions': portfolio.positions.select_related("asset"),
+        'transactions': portfolio.transactions.select_related("asset"),
     }
     return render(request, 'accounts/dashboard.html', context)
 
