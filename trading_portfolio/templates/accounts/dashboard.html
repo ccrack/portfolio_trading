@@ -87,15 +87,10 @@
             <h5 id="chart-title"></h5>
             <img id="chart-image" src="" alt="Stock Chart" class="img-fluid rounded shadow">
         </div>
-        <div>
-            <a class="btn btn-primary btn-green" href="#quantity">BUY</a>
-            <a class="btn btn-primary btn-red" href="#quantity">SELL</a>
-            {{user.asset}}
-        </div>
     </div>
     <!-- Transaction History -->
     <div class="dashboard-section transaction-box container" style="height:300px; overflow-y:auto;">
-        <div class="row" >
+        <div class="row">
             <div class="dashboard-title">Transaction History</div>
 
             <table border="1" class="table table-dark table-hover">
@@ -174,6 +169,11 @@
             </div>
 
         </form>
+        <div>
+            <a class="btn btn-primary btn-green" href="#quantity">BUY</a>
+            <a class="btn btn-primary btn-red" href="#quantity">SELL</a>
+            {{user.asset}}
+        </div>
     </div>
 </div>
 
