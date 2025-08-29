@@ -29,7 +29,7 @@ SECRET_KEY = config('SECRET_KEY')
 # ALLOWED_HOSTS = []
 
 DEBUG = False
-ALLOWED_HOSTS = ["trading_portfolio.onrender.com"]
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
