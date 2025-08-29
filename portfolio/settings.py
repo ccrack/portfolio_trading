@@ -91,7 +91,7 @@ DATABASES = {
 # Add Aiven SSL options (mysqlclient expects this format)
 DATABASES["default"]["OPTIONS"] = {
     "ssl": {
-        "ca": "/etc/ssl/certs/ca-certificates.crt"  # path to CA bundle
+        "ca": os.path.join(BASE_DIR, "ca.pem")  # correct
     }
 }
 
